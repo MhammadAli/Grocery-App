@@ -4,27 +4,28 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.shoplist.R
 import com.example.shoplist.adapter.ShoppingItemAdapter
-import com.example.shoplist.data.db.ShoppingDatabase
 import com.example.shoplist.data.db.entities.ShoppingItem
-import com.example.shoplist.data.repositories.ShoppingRepository
 import com.example.shoplist.databinding.ActivityShoppingBinding
+import com.google.android.material.snackbar.Snackbar
 import org.kodein.di.android.kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
 
-class ShoppingActivity : AppCompatActivity(),KodeinAware {
+class ShoppingActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein by kodein()
-    private val factory:ShoppingViewModelFactory by instance()
+    private val factory: ShoppingViewModelFactory by instance()
 
 
     lateinit var viewModel: ShoppingViewModel
     lateinit var binding: ActivityShoppingBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shopping)
@@ -35,22 +36,64 @@ class ShoppingActivity : AppCompatActivity(),KodeinAware {
             decreaseCallback = ::decreaseAmount, // this equal to {decreaseAmount(it)}
             deleteCallback = { deleteItem(it) }
         )
-        binding.rvShoppingItems.layoutManager = LinearLayoutManager(this)
-        binding.rvShoppingItems.adapter = adapter
-        binding.data = viewModel
-        binding.lifecycleOwner = this
-        viewModel.getAllShoppingItems().observe(this, Observer {
+        val itemTouchHelperCallback =
+            object : ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+                ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT
+            ) {
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
+                ): Boolean {
+                    return true
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                    val position = viewHolder.adapterPosition
+                    val item = adapter.currentList[position]
+                    viewModel.delete(item)
+                    Snackbar.make(
+                        binding.root,
+                        "Item deleted successfully",
+                        Snackbar.LENGTH_LONG
+                    )
+                        .apply {
+                            setAction("Undo") {
+                                viewModel.upsert(item)
+                            }
+                            show()
+                        }
+                }
+            }
+        ItemTouchHelper(itemTouchHelperCallback).apply {
+            attachToRecyclerView(binding.rvShoppingItems)
+        }
+
+        binding.apply {
+            rvShoppingItems.layoutManager = LinearLayoutManager(this@ShoppingActivity)
+            rvShoppingItems.adapter = adapter
+            data = viewModel
+            lifecycleOwner = this@ShoppingActivity
+
+
+            fab.setOnClickListener {
+                AddShoppingItemDialog(
+                    addItemClicked = ::addItem,
+                    context = this@ShoppingActivity,
+                ).show()
+            }
+        }
+
+        viewModel.getAllShoppingItems().observe(this) {
             binding.data!!.items.value = it
             Log.i("ShoppingActivity", "onCreate: ${binding.data!!.items.value}")
-        })
-
-        binding.fab.setOnClickListener {
-            AddShoppingItemDialog(this, object : AddDialogListener {
-                override fun onAddButtonClicked(item: ShoppingItem) {
-                    viewModel.upsert(item)
-                }
-            }).show()
         }
+
+    }
+
+    private fun addItem(item: ShoppingItem) {
+        viewModel.upsert(item)
 
     }
 

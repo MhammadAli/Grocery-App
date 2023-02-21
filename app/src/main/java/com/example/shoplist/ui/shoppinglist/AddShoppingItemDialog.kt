@@ -8,8 +8,11 @@ import androidx.appcompat.app.AppCompatDialog
 import com.example.shoplist.data.db.entities.ShoppingItem
 import com.example.shoplist.databinding.DialogAddShoppingItemBinding
 
-class AddShoppingItemDialog(context: Context,var addDialogListener: AddDialogListener) : AppCompatDialog(context) {
-    lateinit var binding: DialogAddShoppingItemBinding
+class AddShoppingItemDialog(
+    val addItemClicked: (ShoppingItem) -> Unit,
+    context: Context
+) : AppCompatDialog(context) {
+    private lateinit var binding: DialogAddShoppingItemBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DialogAddShoppingItemBinding.inflate(LayoutInflater.from(context), null, false)
@@ -24,14 +27,13 @@ class AddShoppingItemDialog(context: Context,var addDialogListener: AddDialogLis
                 return@setOnClickListener
             }
             val item = ShoppingItem(name = name, amount = amount)
-            addDialogListener.onAddButtonClicked(item)
+            addItemClicked(item)
             dismiss() // There is no onDestroy in Dialog, so we simulate it from dismiss()
         }
 
         binding.tvCancel.setOnClickListener {
             cancel()
         }
-
 
 
     }
