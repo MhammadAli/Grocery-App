@@ -3,6 +3,7 @@ package com.example.shoplist.ui.shoppinglist
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -87,8 +88,17 @@ class ShoppingActivity : AppCompatActivity(), KodeinAware {
 
         viewModel.getAllShoppingItems().observe(this) {
             binding.data!!.items.value = it
+
+            if (viewModel.items.value?.isEmpty() == true) {
+                binding.empty.visibility = View.VISIBLE
+            }
+            else
+            {
+                binding.empty.visibility = View.GONE
+            }
             Log.i("ShoppingActivity", "onCreate: ${binding.data!!.items.value}")
         }
+
 
     }
 
