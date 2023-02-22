@@ -2,8 +2,6 @@ package com.example.shoplist.ui.shoppinglist
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -37,6 +35,7 @@ class ShoppingActivity : AppCompatActivity(), KodeinAware {
             decreaseCallback = ::decreaseAmount, // this equal to {decreaseAmount(it)}
             deleteCallback = { deleteItem(it) }
         )
+
         val itemTouchHelperCallback =
             object : ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP or ItemTouchHelper.DOWN,
@@ -86,41 +85,25 @@ class ShoppingActivity : AppCompatActivity(), KodeinAware {
             }
         }
 
+
         viewModel.getAllShoppingItems().observe(this) {
-            binding.data!!.items.value = it
+            viewModel.items.value = it
 
-            if (viewModel.items.value?.isEmpty() == true) {
-                binding.empty.visibility = View.VISIBLE
-            }
-            else
-            {
-                binding.empty.visibility = View.GONE
-            }
-            Log.i("ShoppingActivity", "onCreate: ${binding.data!!.items.value}")
+            viewModel.stateCheck()
         }
-
-
     }
 
-    private fun addItem(item: ShoppingItem) {
-        viewModel.upsert(item)
 
-    }
+    private fun addItem(item: ShoppingItem) = viewModel.upsert(item)
 
-    private fun increaseAmount(item: ShoppingItem) {
-        val item2 = item.copy(amount = (item.amount.toInt() + 1).toString())
 
-        viewModel.upsert(item2)
-    }
+    private fun increaseAmount(item: ShoppingItem) =
+        viewModel.upsert(viewModel.increaseItemAmount(item))
 
-    private fun decreaseAmount(item: ShoppingItem) {
-        var item2: ShoppingItem = item
-        if (item.amount.toInt() > 0) {
-            item2 = item.copy(amount = (item.amount.toInt() - 1).toString())
 
-        }
-        viewModel.upsert(item2)
-    }
+    private fun decreaseAmount(item: ShoppingItem) =
+        viewModel.upsert(viewModel.decreaseItemAmount(item))
+
 
     private fun deleteItem(item: ShoppingItem) = viewModel.delete(item)
 

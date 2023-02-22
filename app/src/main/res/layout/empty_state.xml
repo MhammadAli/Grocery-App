@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="68dp"
         android:textSize="40sp"
-        android:text="Not items"
+        android:text="No items"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
         app:layout_constraintHorizontal_bias="0.507"
         app:layout_constraintStart_toStartOf="@+id/imageView"

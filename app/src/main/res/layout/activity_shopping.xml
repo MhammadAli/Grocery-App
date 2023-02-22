@@ -38,7 +38,7 @@
 
         <include
             android:id="@+id/empty"
-            android:visibility="gone"
+            android:visibility="@{data.state}"
             layout="@layout/empty_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -54,7 +54,8 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_add_foreground"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            android:contentDescription="TODO" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
